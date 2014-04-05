@@ -1,6 +1,12 @@
 {EditorView, View} = require 'atom'
 Clipboard = require 'clipboard'
-
+path = require 'path'
+https = require 'https'
+fs = require 'fs-plus'
+mkdirp = require 'mkdirp'
+url = require 'url'
+_ = require 'underscore'
+octonode = require 'octonode'
 
 module.exports =
 class GlistView extends View
@@ -26,7 +32,7 @@ class GlistView extends View
   initialize: (serializeState) ->
     @handleEvents()
     @isPublic = atom.config.get('glist.ispublic')
-    atom.workspaceView.command "glist:toggle", => @toggle()
+    @gistsPath = atom.config.get('glist.gistLocation')
     atom.workspaceView.command "glist:saveGist", => @saveGist()
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
@@ -46,6 +52,7 @@ class GlistView extends View
     @detach()
 
   updateList: ->
+    @showProgressIndicator()
     @ghgist.list(@writefiles.bind(this))
 
   writefiles: (error, res) ->
@@ -88,13 +95,12 @@ class GlistView extends View
     @gistButton.on 'click', => @createGist()
     @publicButton.on 'click', => @makePublic()
     @privateButton.on 'click', => @makePrivate()
-    @descriptionEditor.on 'core:confirm', => @gistIt()
+    @descriptionEditor.on 'core:confirm', => @createGist()
     @descriptionEditor.on 'core:cancel', => @detach()
 
   saveGist: ->
     editor = atom.workspace.getActiveEditor()
     editor.save()
-    debugger
 
     title = editor.getLongTitle()
     gistid = title.split('-')[1]?.trim()
@@ -109,6 +115,8 @@ class GlistView extends View
         console.log error, res
     else
       @showGistForm()
+      atom.workspaceView.append(this)
+      @descriptionEditor.focus()
 
   showForm: ->
     @showGistForm()
@@ -121,13 +129,16 @@ class GlistView extends View
     editor = atom.workspace.getActiveEditor()
     gist = {}
     gist.description = @descriptionEditor.getText()
-    gist.files = {
-      editor.getTitle(): {
-        'content': editor.getBuffer().getText()
-      }
-    }
-    @ghgist.create ->
-      console.log "created"
+    filename = editor.getTitle()
+    gist.files={}
+    gist.files[filename] =
+      content: editor.getBuffer().getText()
+    gist.public = @isPublic
+    self = @
+    @ghgist.create gist, (error, res)->
+      console.log "created", error, res
+      Clipboard.writeText res.html_url
+      self.showUrlDisplay()
 
   makePublic: ->
     @publicButton.addClass('selected')
@@ -141,7 +152,6 @@ class GlistView extends View
 
   showGistForm: ->
     if @isPublic then @makePublic() else @makePrivate()
-    @descriptionEditor.setText @gist.description
 
     @toolbar.show()
     @signupForm.show()
