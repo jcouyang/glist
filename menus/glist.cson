@@ -1,0 +1,17 @@
+# See https://atom.io/docs/latest/creating-a-package#menus for more details
+'context-menu':
+  '.overlayer':
+      'Enable glist': 'glist:toggle'
+
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'glist'
+      'submenu': [
+        { 'label': 'Toggle', 'command': 'glist:toggle' }
+        { 'label': 'Update', 'command': 'glist:update' }
+      ]
+    ]
+  }
+]
