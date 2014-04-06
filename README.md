@@ -11,3 +11,5 @@ glist let you list and edit gist within atom.
 3. `ctrl-x ctrl-s` will both save your gist locally and update on gist.github.com
 
 now I can use Atom and gist in place of evernote :beer:
+
+> thanks to gist-it give me inspiration, I fork and build this base on that code.
