@@ -20,25 +20,26 @@ class GlistView extends View
               @button outlet: "privateButton", class: "btn", "Private"
               @button outlet: "publicButton", class: "btn", "Public"
         @div class: "panel-body padded", =>
-          @div outlet: 'signupForm', =>
+          @div outlet: 'descriptionForm', =>
             @subview 'descriptionEditor', new EditorView(mini:true, placeholderText: 'Description')
             @div class: 'pull-right', =>
-              @button outlet: 'gistButton', class: 'btn btn-primary', "Gist It"
+              @button outlet: 'gistButton', class: 'btn btn-primary', "Gist"
           @div outlet: 'progressIndicator', =>
             @span class: 'loading loading-spinner-medium'
-          @div outlet: 'urlDisplay', =>
-            @span "All Done! the Gist's URL has been copied to your clipboard."
+
 
   initialize: (serializeState) ->
     @handleEvents()
     @isPublic = atom.config.get('glist.ispublic')
     @gistsPath = atom.config.get('glist.gistLocation')
     atom.workspaceView.command "glist:saveGist", => @saveGist()
+    atom.workspaceView.command "glist:update", => @updateList()
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
     @previousPath = atom.project.getPath();
     atom.project.setPath(@gistsPath);
     @ghgist = octonode.client(atom.config.get("glist.userToken")).gist()
+
     @updateList()
 
   # Returns an object that can be retrieved when package is activated
@@ -67,6 +68,7 @@ class GlistView extends View
           fetch gist.files[filename].raw_url, "get", null, (raw) ->
             console.log "writing gist", filename
             fs.writeFileSync path.join(gistPath, filename), raw
+    @detach()
 
   fetch: (address, method, contentType, callback) ->
     urlobj = url.parse address
@@ -100,29 +102,27 @@ class GlistView extends View
 
   saveGist: ->
     editor = atom.workspace.getActiveEditor()
-    editor.save()
-
+    editor.save() if editor.getBuffer().getPath()?
     title = editor.getLongTitle()
-    gistid = title.split('-')[1]?.trim()
+    gistid = title.split(' - ')[1]?.trim()
     gist = _(@gists).find (gist)->
       return gist.id == gistid
-
     if gist
+      @showProgressIndicator()
       gist = _(gist).pick 'description', 'files'
-
       gist.files[editor.getTitle()].content = editor.getBuffer().getText()
+      self = @
       @ghgist.edit gistid, gist, (error, res)->
-        console.log error, res
+        if error
+          self.showErrorMsg(error.message)
+          setTimeout (=>
+            self.detach()
+          ), 2000
+        else
+          self.detach()
     else
       @showGistForm()
-      atom.workspaceView.append(this)
       @descriptionEditor.focus()
-
-  showForm: ->
-    @showGistForm()
-    atom.workspaceView.append(this)
-
-    @descriptionEditor.focus()
 
   createGist: ->
     @showProgressIndicator()
@@ -136,9 +136,14 @@ class GlistView extends View
     gist.public = @isPublic
     self = @
     @ghgist.create gist, (error, res)->
-      console.log "created", error, res
-      Clipboard.writeText res.html_url
-      self.showUrlDisplay()
+      if error
+        self.showErrorMsg(error.message)
+        setTimeout (=>
+          self.detach()
+        ), 2000
+      else
+        Clipboard.writeText res.html_url
+        self.detach()
 
   makePublic: ->
     @publicButton.addClass('selected')
@@ -151,21 +156,23 @@ class GlistView extends View
     @isPublic = false
 
   showGistForm: ->
+    atom.workspaceView.append(this)
     if @isPublic then @makePublic() else @makePrivate()
-
+    @title.text "New Gist"
     @toolbar.show()
-    @signupForm.show()
-    @urlDisplay.hide()
+    @descriptionForm.show()
     @progressIndicator.hide()
 
   showProgressIndicator: ->
+    atom.workspaceView.append(this)
+    @title.text "glisting..."
     @toolbar.hide()
-    @signupForm.hide()
-    @urlDisplay.hide()
+    @descriptionForm.hide()
     @progressIndicator.show()
 
-  showUrlDisplay: ->
+  showErrorMsg: (msg) ->
+    atom.workspaceView.append(this)
+    @title.text "ERROR..#{msg}"
     @toolbar.hide()
-    @signupForm.hide()
-    @urlDisplay.show()
+    @descriptionForm.hide()
     @progressIndicator.hide()

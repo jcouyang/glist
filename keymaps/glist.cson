@@ -8,5 +8,5 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
-  'ctrl-alt-o': 'glist:toggle'
-  # 'cmd-s': 'glist:update'
+  'ctrl-c ctrl-g': 'glist:toggle'
+  'ctrl-x ctrl-s': 'glist:saveGist'

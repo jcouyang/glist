@@ -2,11 +2,11 @@
   "name": "glist",
   "main": "./lib/glist",
   "version": "0.0.1",
-  "description": "A short description of your package",
+  "description": "easy list and edit gist from atom",
   "activationEvents": [
     "glist:toggle"
   ],
-  "repository": "https://github.com/atom/glist",
+  "repository": "https://github.com/jcouyang/glist",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"
