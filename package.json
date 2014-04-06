@@ -2,7 +2,7 @@
   "name": "glist",
   "main": "./lib/glist",
   "version": "0.0.1",
-  "description": "easy list and edit gist from atom",
+  "description": "easy way to list and edit gist within atom",
   "activationEvents": [
     "glist:toggle"
   ],
