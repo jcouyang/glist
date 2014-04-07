@@ -7,6 +7,7 @@ mkdirp = require 'mkdirp'
 url = require 'url'
 _ = require 'underscore'
 octonode = require 'octonode'
+shell = require 'shell'
 
 module.exports =
 class GlistView extends View
@@ -34,6 +35,7 @@ class GlistView extends View
     @gistsPath = atom.config.get('glist.gistLocation')
     atom.workspaceView.command "glist:saveGist", => @saveGist()
     atom.workspaceView.command "glist:update", => @updateList()
+    atom.workspaceView.command "glist:delete", => @deleteCurrentFile()
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
     @previousPath = atom.project.getPath();
@@ -144,6 +146,30 @@ class GlistView extends View
       else
         Clipboard.writeText res.html_url
         self.detach()
+
+  deleteCurrentFile: ->
+    editor = atom.workspace.getActiveEditor()
+    title = editor.getLongTitle()
+    gistid = title.split(' - ')[1]?.trim()
+    gist = _(@gists).find (gist)->
+      return gist.id == gistid
+    console.log title
+    if gist
+      @showProgressIndicator()
+      gist = _(gist).pick 'description', 'files'
+      gist.files[editor.getTitle()] = null
+      self = @
+      @ghgist.edit gistid, gist, (error, res)->
+        if error
+          self.showErrorMsg(error.message)
+          setTimeout (=>
+            self.detach()
+          ), 2000
+        else
+          shell.moveItemToTrash(editor.getBuffer().getPath())
+          self.detach()
+    else
+      shell.moveItemToTrash(editor.getBuffer().getPath())
 
   makePublic: ->
     @publicButton.addClass('selected')
