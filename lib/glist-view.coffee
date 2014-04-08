@@ -31,14 +31,13 @@ class GlistView extends View
 
   initialize: (serializeState) ->
     @handleEvents()
-    @isPublic = atom.config.get('glist.ispublic')
-    @gistsPath = atom.config.get('glist.gistLocation')
     atom.workspaceView.command "glist:saveGist", => @saveGist()
     atom.workspaceView.command "glist:update", => @updateList()
     atom.workspaceView.command "glist:delete", => @deleteCurrentFile()
+    @isPublic = atom.config.get('glist.ispublic')
+    @gistsPath = atom.config.get('glist.gistLocation')
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
-    @previousPath = atom.project.getPath();
     atom.project.setPath(@gistsPath);
     @ghgist = octonode.client(atom.config.get("glist.userToken")).gist()
 
@@ -50,8 +49,9 @@ class GlistView extends View
   # Tear down any state and detach
   destroy: ->
     console.log("off")
-    atom.project.setPath(@previousPath)
-    @previousPath=null
+    atom.workspaceView.off "glist:saveGist"
+    atom.workspaceView.off "glist:update"
+    atom.workspaceView.off "glist:delete"
     @detach()
 
   updateList: ->
@@ -172,6 +172,8 @@ class GlistView extends View
     else
       shell.moveItemToTrash(editor.getBuffer().getPath())
 
+  delete: ->
+    console.log "delete from tree view"
   makePublic: ->
     @publicButton.addClass('selected')
     @privateButton.removeClass('selected')
