@@ -3,6 +3,7 @@ GlistView = require '../lib/glist-view'
 fs = require 'fs-plus'
 path = require 'path'
 shell = require 'shell'
+mkdirp = require 'mkdirp'
 describe "GlistView", ->
   glistView = null
   beforeEach ->
@@ -37,7 +38,7 @@ describe "GlistView", ->
 
   # describe "when save gist", ->
 
-  fdescribe "when delete gist file", ->
+  describe "when delete gist file", ->
     it "will remove bot local and remote file",->
       gists = [
         {'id':'123456', 'files': {'tobeDeleted.txt':{'raw_url': 'a url'}}}
@@ -55,10 +56,11 @@ describe "GlistView", ->
       expect(edit.calls[0].args[1]).toEqual({'files': {'tobeDeleted.txt':null}})
 
     it "will delete gist file if not in remote", ->
-      shell = spyOn(shell, "moveItemToTrash")
+      shellspy = spyOn(shell, "moveItemToTrash")
+      mkdirp.sync(path.join(__dirname, "/123456/"))
       filePath = path.join(__dirname, '/123456/tobeDeleted.txt')
       fs.writeFileSync(filePath)
       atom.workspaceView.openSync(filePath)
 
       glistView.deleteCurrentFile()
-      expect(shell).toHaveBeenCalled()
+      expect(shellspy).toHaveBeenCalled()

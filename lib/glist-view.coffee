@@ -153,7 +153,6 @@ class GlistView extends View
     gistid = title.split(' - ')[1]?.trim()
     gist = _(@gists).find (gist)->
       return gist.id == gistid
-    console.log title
     if gist
       @showProgressIndicator()
       gist = _(gist).pick 'description', 'files'
@@ -167,6 +166,8 @@ class GlistView extends View
           ), 2000
         else
           shell.moveItemToTrash(editor.getBuffer().getPath())
+          if Object.keys(res.files).length is 0
+            shell.moveItemToTrash(path.dirname(editor.getBuffer().getPath()))
           self.detach()
     else
       shell.moveItemToTrash(editor.getBuffer().getPath())
