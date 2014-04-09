@@ -10,6 +10,11 @@ Install
 apm install glist
 ```
 
+Setting
+========
+
+open glist's setting and input username and user token if they are empty. by default, glist will read them from your git config.
+
 How to Use
 ==========
 there is kind of `glist mode` concept if you've use the emacs gist mode before, you can `ctrl-x ctrl-g` to toggle on/off `glist mode`
@@ -19,5 +24,7 @@ there is kind of `glist mode` concept if you've use the emacs gist mode before, 
 2. `cmd-t` to find any gist you wanna edit
 
 3. `ctrl-x ctrl-s` will both save your gist locally and update on gist.github.com
+
+4. you can aslo delete a gist with command "glist:delete"
 
 now I can use Atom and gist in place of evernote :beer:

@@ -1,6 +1,6 @@
 path = require 'path'
 GlistView = require './glist-view'
-
+mkdirp = require 'mkdirp'
 module.exports =
   activate: (state) ->
     atom.workspaceView.command "glist:toggle", => @toggle()
@@ -18,9 +18,11 @@ module.exports =
       @deactivate()
     else
       console.log("on")
-      @previousPath = atom.project.getPath();
+      @previousPath = atom.project.getPath()
       @glistView = new GlistView()
-      atom.project.setPath(atom.config.get('glist.gistLocation'));
+      gistPath = atom.config.get('glist.gistLocation')
+      mkdirp.sync(gistPath)
+      atom.project.setPath(gistPath)
 
   configDefaults:
     userToken: atom.getGitHubAuthToken()
