@@ -48,7 +48,6 @@ class GlistView extends View
 
   # Tear down any state and detach
   destroy: ->
-    console.log("off")
     atom.workspaceView.off "glist:saveGist"
     atom.workspaceView.off "glist:update"
     atom.workspaceView.off "glist:delete"
