@@ -24,20 +24,6 @@ describe "GlistView", ->
       expect(indicator).toHaveBeenCalled()
       expect(list).toHaveBeenCalled()
 
-    it "will write files into gist folder", ->
-      fetch = spyOn(glistView, "fetch")
-      detach = spyOn(glistView, "detach")
-      gists = [
-        {'id':'1', 'files': {'blah':{'raw_url': 'a url'}}}
-        {'id':'2', 'files': {'blah':{'raw_url': 'another url'}}}
-      ]
-      glistView.writefiles(null, gists)
-      expect(fetch.calls[0].args[0]).toBe('a url')
-      expect(fetch.calls[1].args[0]).toBe('another url')
-      expect(detach).toHaveBeenCalled()
-
-  # describe "when save gist", ->
-
   describe "when delete gist file", ->
     it "will remove bot local and remote file",->
       gists = [

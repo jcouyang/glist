@@ -8,11 +8,19 @@ url = require 'url'
 _ = require 'underscore'
 octonode = require 'octonode'
 shell = require 'shell'
-exec = require('child_process').exec;
+exec = require('child_process').exec
+
+splashStatus = (status) ->
+  statusBar = atom.workspaceView.statusBar
+  statusBar.find("#glist-logs").remove()
+  statusBar.appendRight("<span id=glist-logs>#{status}</span>")
+  setTimeout (=>
+    statusBar.find("#glist-logs").remove()
+  ), 7000
 
 printer = (error, stdout, stderr) ->
-  console.log('stdout: ' + stdout)
-  console.log('stderr: ' + stderr)
+  splashStatus("#{stdout} !! #{stderr}")
+  console.log("#{stdout} !! #{stderr}")
   console.log('exec error: ' + error) if error?
 
 module.exports =
@@ -71,7 +79,6 @@ class GlistView extends View
     res.forEach (gist) ->
       gistPath = path.join(gistsPath, gist.id)
       unless fs.existsSync(gistPath)
-        debugger
         exec "git submodule add #{gist.git_pull_url}",
           cwd: gistsPath
           , printer
@@ -93,31 +100,33 @@ class GlistView extends View
 
   saveGist: ->
     editor = atom.workspace.getActiveEditor()
-    editor.save() if editor.getBuffer().getPath()?
-    title = editor.getLongTitle()
-    gistid = title.split('  ')[1]?.trim()
-    gist = _(@gists).find (gist) ->
-      return gist.id == gistid
-    if gist
-      @showProgressIndicator()
-      gist = _(gist).pick 'description', 'files'
-      gist.files[editor.getTitle()].content = editor.getBuffer().getText()
-      self = @
-      @ghgist.edit gistid, gist, (error, res) ->
-        if error
-          self.showErrorMsg(error.message)
-          setTimeout (=>
-            self.detach()
-          ), 2000
-        else
-          self.detach()
+    gistPath = path.dirname(editor.getBuffer().getPath())
+    if gistPath? and fs.existsSync(path.join(gistPath, ".git"))
+      editor.save()
     else
-      @showGistForm()
-      @descriptionEditor.focus()
+      @showFilenameForm()
+      @filenameEditor.focus()
+      return
+
+    @showProgressIndicator()
+    self = @
+    exec 'git commit -am "edit"',
+      cwd: gistPath
+      , (error, stdout, stderror) ->
+        printer(error, stdout, stderror)
+        self.detach()
+        exec 'git push origin master',
+          cwd: gistPath
+          , (error, stdout, stderror) ->
+            printer(error, stdout, stderror)
+            self.detach()
 
   newfile: ->
     editor = atom.workspace.getActiveEditor()
     editor.saveAs(path.join(@gistsPath, ".tmp/#{@filenameEditor.getText()||'untitled'}"))
+    @detach()
+    @showGistForm()
+    @descriptionEditor.focus()
 
   createGist: ->
     @showProgressIndicator()
@@ -138,6 +147,9 @@ class GlistView extends View
         ), 2000
       else
         Clipboard.writeText res.html_url
+        exec 'git submodule update --remote --merge',
+          cwd: self.gistsPath
+          , printer
         self.detach()
 
   deleteCurrentFile: ->
