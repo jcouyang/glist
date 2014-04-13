@@ -1,5 +1,5 @@
 {
-  "name": "glist",
+  "name": "gist",
   "main": "./lib/glist",
   "version": "0.1.7",
   "description": "easy way to list and edit gist within atom",

@@ -8,6 +8,12 @@ url = require 'url'
 _ = require 'underscore'
 octonode = require 'octonode'
 shell = require 'shell'
+exec = require('child_process').exec;
+
+printer = (error, stdout, stderr) ->
+  console.log('stdout: ' + stdout)
+  console.log('stderr: ' + stderr)
+  console.log('exec error: ' + error) if error?
 
 module.exports =
 class GlistView extends View
@@ -21,6 +27,8 @@ class GlistView extends View
               @button outlet: "privateButton", class: "btn", "Private"
               @button outlet: "publicButton", class: "btn", "Public"
         @div class: "panel-body padded", =>
+          @div outlet: 'filenameForm', =>
+            @subview 'filenameEditor', new EditorView(mini:true, placeholderText: 'File name')
           @div outlet: 'descriptionForm', =>
             @subview 'descriptionEditor', new EditorView(mini:true, placeholderText: 'Description')
             @div class: 'pull-right', =>
@@ -38,9 +46,7 @@ class GlistView extends View
     @gistsPath = atom.config.get('glist.gistLocation')
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
-    atom.project.setPath(@gistsPath);
-    @ghgist = octonode.client(atom.config.get("glist.userToken")).gist()
-
+    @ghgist = octonode.client(@token).gist()
     @updateList()
 
   # Returns an object that can be retrieved when package is activated
@@ -59,40 +65,22 @@ class GlistView extends View
 
   writefiles: (error, res) ->
     return if error?
-    fetch = @fetch
+    gistsPath = @gistsPath
     @gists = res
-    gistsPath = path.join(__dirname, "../gists")
+
     res.forEach (gist) ->
       gistPath = path.join(gistsPath, gist.id)
-      mkdirp.sync(gistPath)
-      Object.keys(gist.files).forEach (filename) ->
-          fetch gist.files[filename].raw_url, "get", null, (raw) ->
-            console.log "writing gist", filename
-            fs.writeFileSync path.join(gistPath, filename), raw
+      unless fs.existsSync(gistPath)
+        debugger
+        exec "git submodule add #{gist.git_pull_url}",
+          cwd: gistsPath
+          , printer
+
+    exec 'git submodule update --remote --merge',
+      cwd: gistsPath
+      , printer
     @detach()
-
-  fetch: (address, method, contentType, callback) ->
-    urlobj = url.parse address
-    options =
-      hostname: urlobj.host
-      path: urlobj.pathname
-      method: method
-      headers:
-        'User-Agent':"Atom"
-
-    options.headers["Authorization"] = "token #{@token}" if @token?
-
-    https.get options, (res) ->
-      res.setEncoding "utf8"
-      body = ''
-      res.on "data", (chunk) ->
-        body += chunk
-      res.on "end", ->
-        if contentType is 'json'
-          response = JSON.parse(body)
-        else
-          response = body
-        callback(response)
+    atom.workspaceView.trigger 'tree-view:toggle-focus'
 
   handleEvents: ->
     @gistButton.on 'click', => @createGist()
@@ -100,20 +88,22 @@ class GlistView extends View
     @privateButton.on 'click', => @makePrivate()
     @descriptionEditor.on 'core:confirm', => @createGist()
     @descriptionEditor.on 'core:cancel', => @detach()
+    @filenameEditor.on 'core:confirm', => @newfile()
+    @filenameEditor.on 'core:cancel', => @detach()
 
   saveGist: ->
     editor = atom.workspace.getActiveEditor()
     editor.save() if editor.getBuffer().getPath()?
     title = editor.getLongTitle()
-    gistid = title.split(' - ')[1]?.trim()
-    gist = _(@gists).find (gist)->
+    gistid = title.split('  ')[1]?.trim()
+    gist = _(@gists).find (gist) ->
       return gist.id == gistid
     if gist
       @showProgressIndicator()
       gist = _(gist).pick 'description', 'files'
       gist.files[editor.getTitle()].content = editor.getBuffer().getText()
       self = @
-      @ghgist.edit gistid, gist, (error, res)->
+      @ghgist.edit gistid, gist, (error, res) ->
         if error
           self.showErrorMsg(error.message)
           setTimeout (=>
@@ -124,6 +114,10 @@ class GlistView extends View
     else
       @showGistForm()
       @descriptionEditor.focus()
+
+  newfile: ->
+    editor = atom.workspace.getActiveEditor()
+    editor.saveAs(path.join(@gistsPath, ".tmp/#{@filenameEditor.getText()||'untitled'}"))
 
   createGist: ->
     @showProgressIndicator()
@@ -188,13 +182,23 @@ class GlistView extends View
     if @isPublic then @makePublic() else @makePrivate()
     @title.text "New Gist"
     @toolbar.show()
+    @filenameForm.hide()
     @descriptionForm.show()
+    @progressIndicator.hide()
+
+  showFilenameForm: ->
+    atom.workspaceView.append(this)
+    @title.text "Name the file"
+    @toolbar.hide()
+    @descriptionForm.hide()
+    @filenameForm.show()
     @progressIndicator.hide()
 
   showProgressIndicator: ->
     atom.workspaceView.append(this)
     @title.text "glisting..."
     @toolbar.hide()
+    @filenameForm.hide()
     @descriptionForm.hide()
     @progressIndicator.show()
 
@@ -202,5 +206,6 @@ class GlistView extends View
     atom.workspaceView.append(this)
     @title.text "ERROR..#{msg}"
     @toolbar.hide()
+    @filenameForm.hide()
     @descriptionForm.hide()
     @progressIndicator.hide()
