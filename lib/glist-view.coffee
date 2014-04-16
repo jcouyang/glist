@@ -52,6 +52,7 @@ class GlistView extends View
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
     @ghgist = octonode.client(@token).gist()
+    exec('git init', cwd: @gistsPath, printer) unless fs.existsSync(path.join(@gistsPath), "git")
     @updateList()
 
   # Returns an object that can be retrieved when package is activated
