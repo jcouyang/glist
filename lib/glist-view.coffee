@@ -52,8 +52,15 @@ class GlistView extends View
     @token = atom.config.get("glist.userToken")
     @user = atom.config.get("glist.userName")
     @ghgist = octonode.client(@token).gist()
-    exec('git init', cwd: @gistsPath, printer) unless fs.existsSync(path.join(@gistsPath), "git")
-    @updateList()
+
+    self = @
+    unless fs.existsSync(path.join(@gistsPath, ".git"))
+      exec 'git init',
+        cwd: @gistsPath
+        , (er, stdout, stderror) ->
+          debugger
+          printer er, stdout, stderror
+          self.updateList()
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
@@ -178,7 +185,9 @@ class GlistView extends View
           if Object.keys(res.files).length is 0
             shell.moveItemToTrash(path.dirname(editor.getBuffer().getPath()))
             self.ghgist.delete(gistid);
-            exec "git rm #{gistid} && git submodule sync", cwd: self.gistsPath, printer
+            exec "git rm #{gistid} && git submodule sync",
+              cwd: self.gistsPath
+              , printer
           self.detach()
     else
       shell.moveItemToTrash(editor.getBuffer().getPath())

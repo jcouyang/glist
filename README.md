@@ -17,7 +17,9 @@ first
 Setting
 ========
 
-open glist's setting and input username and user token if they are empty. by default, glist will read them from your git config.
+open glist's setting and input username and user token if they are empty.
+
+by default, glist will read them from your git config.
 
 How to Use
 ==========
