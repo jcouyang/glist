@@ -26,6 +26,6 @@ module.exports =
 
   configDefaults:
     userToken: atom.getGitHubAuthToken()
-    userName:atom.project.getRepo().getConfigValue("github.user")
+    userName:atom.project.getRepo()?.getConfigValue("github.user")
     gistLocation: path.join(__dirname, "../gists")
     ispublic: true
