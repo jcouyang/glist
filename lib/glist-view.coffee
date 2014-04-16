@@ -1,10 +1,7 @@
 {EditorView, View} = require 'atom'
 Clipboard = require 'clipboard'
 path = require 'path'
-https = require 'https'
 fs = require 'fs-plus'
-mkdirp = require 'mkdirp'
-url = require 'url'
 _ = require 'underscore'
 octonode = require 'octonode'
 shell = require 'shell'
@@ -147,9 +144,15 @@ class GlistView extends View
         ), 2000
       else
         Clipboard.writeText res.html_url
-        exec 'git submodule update --remote --merge',
+        exec "git submodule add #{res.git_pull_url}",
           cwd: self.gistsPath
-          , printer
+          , (error, stdout,stderr) ->
+            atom.workspaceView.trigger "core:save"
+            atom.workspaceView.trigger "core:close"
+            shell.moveItemToTrash(path.join(self.gistsPath, ".tmp"))
+            atom.workspaceView.open path.join(self.gistsPath, "#{res.id}/#{filename}")
+            printer(error,stdout,stderr)
+
         self.detach()
 
   deleteCurrentFile: ->
@@ -173,6 +176,8 @@ class GlistView extends View
           shell.moveItemToTrash(editor.getBuffer().getPath())
           if Object.keys(res.files).length is 0
             shell.moveItemToTrash(path.dirname(editor.getBuffer().getPath()))
+            self.ghgist.delete(gistid);
+            exec "git rm #{gistid} && git submodule sync", cwd: self.gistsPath, printer
           self.detach()
     else
       shell.moveItemToTrash(editor.getBuffer().getPath())

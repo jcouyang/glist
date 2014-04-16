@@ -9,6 +9,10 @@ Install
 ```
 apm install glist
 ```
+1.0.0 is a major change, It use git submodule to manage your gist, so
+
+:heavy_exclamation_mark: you may need to do [Permanently authenticating with Git repositories](https://confluence.atlassian.com/display/STASH/Permanently+authenticating+with+Git+repositories)
+first
 
 Setting
 ========
