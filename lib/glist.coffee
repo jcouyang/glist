@@ -25,7 +25,7 @@ module.exports =
       atom.project.setPath(gistPath)
 
   configDefaults:
-    userToken: atom.getGitHubAuthToken()
+    userToken: atom.getRepo()?.getConfigValue("github.oauth-token")
     userName:atom.project.getRepo()?.getConfigValue("github.user")
     gistLocation: path.join(__dirname, "../gists")
     ispublic: true
