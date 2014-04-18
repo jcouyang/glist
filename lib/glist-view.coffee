@@ -55,12 +55,14 @@ class GlistView extends View
 
     self = @
     unless fs.existsSync(path.join(@gistsPath, ".git"))
+      shell.moveItemToTrash(@gistsPath)
       exec 'git init',
         cwd: @gistsPath
         , (er, stdout, stderror) ->
-          debugger
           printer er, stdout, stderror
           self.updateList()
+    else
+      @updateList()
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
