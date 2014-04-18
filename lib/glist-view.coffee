@@ -55,12 +55,12 @@ class GlistView extends View
 
     self = @
     unless fs.existsSync(path.join(@gistsPath, ".git"))
-      shell.moveItemToTrash(@gistsPath)
+      shell.moveItemToTrash(path.join(@gistsPath,"*"))
       exec 'git init',
-        cwd: @gistsPath
+        cwd: self.gistsPath
         , (er, stdout, stderror) ->
           printer er, stdout, stderror
-          self.updateList()
+          self.updateList() unless er
     else
       @updateList()
 
