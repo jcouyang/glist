@@ -34,6 +34,8 @@ class GlistView extends View
         @div class: "panel-body padded", =>
           @div outlet: 'filenameForm', =>
             @subview 'filenameEditor', new EditorView(mini:true, placeholderText: 'File name')
+          @div outlet: 'tokenForm', =>
+            @subview 'tokenEditor', new EditorView(mini:true, placeholderText: 'Github token')
           @div outlet: 'descriptionForm', =>
             @subview 'descriptionEditor', new EditorView(mini:true, placeholderText: 'Description')
             @div class: 'pull-right', =>
@@ -49,20 +51,15 @@ class GlistView extends View
     atom.workspaceView.command "glist:delete", => @deleteCurrentFile()
     @isPublic = atom.config.get('glist.ispublic')
     @gistsPath = atom.config.get('glist.gistLocation')
-    @token = atom.config.get("glist.userToken")
+    @token = localStorage.getItem("glist.userToken")
     @user = atom.config.get("glist.userName")
+    unless @token
+      @showTokenForm()
+      @tokenEditor.focus()
+      return
     @ghgist = octonode.client(@token).gist()
+    @updateList()
 
-    self = @
-    unless fs.existsSync(path.join(@gistsPath, ".git"))
-      shell.moveItemToTrash(path.join(@gistsPath,"*"))
-      exec 'git init',
-        cwd: self.gistsPath
-        , (er, stdout, stderror) ->
-          printer er, stdout, stderror
-          self.updateList() unless er
-    else
-      @updateList()
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
@@ -75,8 +72,18 @@ class GlistView extends View
     @detach()
 
   updateList: ->
-    @showProgressIndicator()
-    @ghgist.list(@writefiles.bind(this))
+    self = @
+    unless fs.existsSync(path.join(@gistsPath, ".git"))
+      shell.moveItemToTrash(path.join(@gistsPath,"*"))
+      exec 'git init',
+        cwd: self.gistsPath
+        , (er, stdout, stderror) ->
+          printer er, stdout, stderror
+          self.updateList() unless er
+    else
+      @showProgressIndicator()
+      @ghgist.list(@writefiles.bind(this))
+
 
   writefiles: (error, res) ->
     return if error?
@@ -104,6 +111,14 @@ class GlistView extends View
     @descriptionEditor.on 'core:cancel', => @detach()
     @filenameEditor.on 'core:confirm', => @newfile()
     @filenameEditor.on 'core:cancel', => @detach()
+    @tokenEditor.on 'core:confirm', => @saveToken()
+    @tokenEditor.on 'core:cancel', => @detach()
+
+  saveToken: ->
+    @token = @tokenEditor.getText()
+    localStorage.setItem("glist.userToken", @token)
+    @ghgist = octonode.client(@token).gist()
+    @updateList()
 
   saveGist: ->
     editor = atom.workspace.getActiveEditor()
@@ -206,35 +221,27 @@ class GlistView extends View
     @publicButton.removeClass('selected')
     @isPublic = false
 
-  showGistForm: ->
+  showFormAs: (title, toolbar, description, filename, progress, token) ->
     atom.workspaceView.append(this)
+    @title.text title
+    @toolbar[toolbar]()
+    @filenameForm[filename]()
+    @descriptionForm[description]()
+    @progressIndicator[progress]()
+    @tokenForm[token]()
+
+  showGistForm: ->
     if @isPublic then @makePublic() else @makePrivate()
-    @title.text "New Gist"
-    @toolbar.show()
-    @filenameForm.hide()
-    @descriptionForm.show()
-    @progressIndicator.hide()
+    @showFormAs("New Gist", 'show', 'show', 'hide', 'hide', 'hide')
 
   showFilenameForm: ->
-    atom.workspaceView.append(this)
-    @title.text "Name the file"
-    @toolbar.hide()
-    @descriptionForm.hide()
-    @filenameForm.show()
-    @progressIndicator.hide()
+    @showFormAs("Name the file", 'hide', 'hide', 'show', 'hide', 'hide')
 
   showProgressIndicator: ->
-    atom.workspaceView.append(this)
-    @title.text "glisting..."
-    @toolbar.hide()
-    @filenameForm.hide()
-    @descriptionForm.hide()
-    @progressIndicator.show()
+    @showFormAs("glisting...", 'hide', 'hide', 'hide', 'show', 'hide')
 
   showErrorMsg: (msg) ->
-    atom.workspaceView.append(this)
-    @title.text "ERROR..#{msg}"
-    @toolbar.hide()
-    @filenameForm.hide()
-    @descriptionForm.hide()
-    @progressIndicator.hide()
+    @showFormAs("ERROR..#{msg}", 'hide', 'hide', 'hide', 'hide', 'hide')
+
+  showTokenForm: ->
+    @showFormAs("input github token", 'hide', 'hide', 'hide', 'hide', 'show')

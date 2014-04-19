@@ -1,8 +1,9 @@
 path = require 'path'
 GlistView = require './glist-view'
 mkdirp = require 'mkdirp'
+
 module.exports =
-  activate: (state) ->
+  activate: ->
     atom.workspaceView.command "glist:toggle", => @toggle()
 
   deactivate: ->
@@ -25,7 +26,6 @@ module.exports =
       atom.project.setPath(gistPath)
 
   configDefaults:
-    userToken: atom.project.getRepo()?.getConfigValue("github.oauth-token")
-    userName:atom.project.getRepo()?.getConfigValue("github.user")
+    userName: localStorage.getItem("glist.username") || atom.project.getRepo()?.getConfigValue("github.user")
     gistLocation: path.join(__dirname, "../gists")
     ispublic: true
