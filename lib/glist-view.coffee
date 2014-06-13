@@ -132,7 +132,7 @@ class GlistView extends View
 
     @showProgressIndicator()
     self = @
-    exec 'git commit -am "edit"',
+    exec 'git add . --all && git commit -m "edit"',
       cwd: gistPath
       , (error, stdout, stderror) ->
         printer(error, stdout, stderror)
