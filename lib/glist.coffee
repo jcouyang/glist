@@ -26,6 +26,6 @@ module.exports =
       atom.project.setPath(gistPath)
 
   configDefaults:
-    userName: localStorage.getItem("glist.username") || atom.project.getRepo()?.getConfigValue("github.user")
+    userName: ""
     gistLocation: path.join(__dirname, "../gists")
     ispublic: true
