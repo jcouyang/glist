@@ -18,7 +18,16 @@ splashStatus = (status) ->
 printer = (error, stdout, stderr) ->
   splashStatus("#{stdout} !! #{stderr}")
   console.log("#{stdout} !! #{stderr}")
-  console.log('exec error: ' + error) if error?
+  console.error('exec error: ' + error) if error?
+
+initGist = (gists, gistsPath) ->
+  gist = gists?.pop()
+  return unless gist?
+  exec "git submodule add #{gist.git_pull_url}",
+    cwd: gistsPath
+    , (er, stdout, stderror) ->
+      printer er, stdout, stderror
+      initGist(gists, gistsPath)
 
 module.exports =
 class GlistView extends View
@@ -85,18 +94,11 @@ class GlistView extends View
       @ghgist.list(@writefiles.bind(this))
 
 
+
   writefiles: (error, res) ->
     return if error?
     gistsPath = @gistsPath
-    @gists = res
-
-    res.forEach (gist) ->
-      gistPath = path.join(gistsPath, gist.id)
-      unless fs.existsSync(gistPath)
-        exec "git submodule add #{gist.git_pull_url}",
-          cwd: gistsPath
-          , printer
-
+    initGist(res, gistsPath)
     exec 'git submodule update --remote --merge',
       cwd: gistsPath
       , printer
@@ -132,7 +134,7 @@ class GlistView extends View
 
     @showProgressIndicator()
     self = @
-    exec 'git add . --all && git commit -m "edit"',
+    exec 'git add . --all && git commit -m "edit from glist"',
       cwd: gistPath
       , (error, stdout, stderror) ->
         printer(error, stdout, stderror)
