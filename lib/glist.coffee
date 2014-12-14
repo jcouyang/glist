@@ -29,3 +29,4 @@ module.exports =
     userName: ""
     gistLocation: path.join(__dirname, "../gists")
     ispublic: true
+    ssh: false

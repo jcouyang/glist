@@ -23,7 +23,7 @@ printer = (error, stdout, stderr) ->
 initGist = (gists, gistsPath) ->
   gist = gists?.pop()
   return unless gist?
-  exec "git submodule add #{gist.git_pull_url}",
+  exec "git submodule add git@gist.github.com:/#{gist.id}.git",
     cwd: gistsPath
     , (er, stdout, stderror) ->
       printer er, stdout, stderror
@@ -171,7 +171,7 @@ class GlistView extends View
         ), 2000
       else
         Clipboard.writeText res.html_url
-        exec "git submodule add #{res.git_pull_url}",
+        exec "git submodule add git@gist.github.com:/#{res.id}.git",
           cwd: self.gistsPath
           , (error, stdout,stderr) ->
             atom.workspaceView.trigger "core:save"
