@@ -3,17 +3,20 @@
 
 _ = require('lodash-fp')
 gistCache = null
+filterQuery = null
 ghgist = null
 module.exports =
 class GlistView extends SelectListView
-  initialize: (client) ->
+  initialize: (client, state) ->
     super
     ghgist = client
     @addClass('overlay from-top')
     @setItems gistCache if gistCache
+    @state = state
 
-  attach: ->
+  attachList: ->
     @storeFocusedElement()
+    @setLoading("Fetching All Gists...")
     @panel ?= atom.workspace.addModalPanel(item: this)
     ghgist.list (error, gists) =>
       indexedGists = _(gists).map (gist) ->
@@ -29,33 +32,42 @@ class GlistView extends SelectListView
 
   viewForItem: (gist) ->
     "<li>
-    <div>#{gist.description}</div>
-<div class='text-subtle'>#{_(gist.files).values().first()?.filename}</div>
-<span class='inline-block highlight-#{if gist.public then "info" else "success"} right'></span>
-</li>"
+      <div>#{gist.description}</div>
+      <div class='text-subtle'>#{_(gist.files).values().first()?.filename}</div>
+    </li>"
 
   getFilterKey: ->
-    console.log @items
     "key"
 
   confirmed: (item) ->
     if item
+      @setLoading("Opening gist #{item.id} #{item.description}...")
       gistPath = atom.config.get('glist.gistDir') + '/' + item.id + '/'
-      console.log gistPath
       ghgist.get item.id, (error, gist) ->
-        console.log gist
-        return if error
+        if error
+          atom.notifications.addError error
+          @cancel()
         _.forEach (file, filename) ->
-          console.log 'saving', gistPath + filename
           gistfile = new File(gistPath + filename)
           gistfile.create().then ->
-            gistfile.write file.content
-          ,(e)->
-            console.log e
+            gistfile.write(file.content).then ->
+              atom.workspace.open(gistPath + filename)
+              @cancel()
+          .catch (e)->
+            @cancel()
+            atom.notifications.addError e
         , gist.files
-      atom.project.addPath(gistPath)
-      console.log("#{item.id} was selected")
-    @cancel()
+      atom.project.addPath(atom.config.get('glist.gistDir'))
+    else
+      @cancel()
+
+  confirmSelection: ->
+    item = @getSelectedItem()
+    if item?
+      @confirmed(item)
+    else
+      @state.filterQuery = @getFilterQuery()
+      atom.workspace.open(atom.config.get('glist.gistDir')+ '/.tmp/' +@state.filterQuery?.toLowerCase().replace(" ","-") + atom.config.get('glist.fileSuffix'))
 
   cancelled: ->
     @panel?.destroy()
@@ -68,4 +80,4 @@ class GlistView extends SelectListView
     if @panel?
       @cancel()
     else
-      @attach()
+      @attachList()

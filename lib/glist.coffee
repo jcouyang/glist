@@ -1,4 +1,5 @@
 GlistView = require './glist-view'
+{TextEditorView} = require 'atom-space-pen-views'
 {CompositeDisposable} = require 'atom'
 octonode = require 'octonode'
 _ = require('lodash-fp')
@@ -8,6 +9,7 @@ module.exports = Glist =
   glistView: null
   modalPanel: null
   subscriptions: null
+  state: {}
   config:
     githubToken:
       type: 'string'
@@ -15,7 +17,9 @@ module.exports = Glist =
     gistDir:
       type: 'string'
       default: atom.packages.getPackageDirPaths() + '/glist/gists'
-
+    fileSuffix:
+      type: 'string'
+      default: '.md'
   activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -29,7 +33,7 @@ module.exports = Glist =
   toggle: ->
     unless glistView?
       @ghgist = octonode.client(atom.config.get('glist.githubToken')).gist()
-      @glistView = new GlistView(@ghgist)
+      @glistView = new GlistView(@ghgist, @state)
     @glistView.toggle()
 
   saveGist: ->
@@ -37,9 +41,14 @@ module.exports = Glist =
     currentItem = atom.workspace.getActivePaneItem()
     gistDir = atom.config.get('glist.gistDir')
     gist = currentItem.getPath().match(/([^/]*)\/([^/]*)$/)
-    newGist = {files: {}}
-    newGist.files[gist[2]] = {content:currentItem.getText()}
-    debugger
-    @ghgist.edit gist[1], newGist, (error, body)->
+    files = {}
+    files[gist[2]] = {filename:gist[2], content:currentItem.getText()}
+    @ghgist.edit gist[1], {files: files}, (error, body) =>
       if error.statusCode == 404
-        @ghgist.create {description: "heheda", newGist}
+        @ghgist.create {description: @state.filterQuery, files: files}, (error)->
+          if error
+            atom.notifications.addError error.toString()
+          else
+            currentItem.destroy()
+      else
+        currentItem.save()
