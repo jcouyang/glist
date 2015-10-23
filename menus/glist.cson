@@ -4,6 +4,10 @@
     {
       'label': 'Toggle glist'
       'command': 'glist:toggle'
+    },
+    {
+      'label': 'Save Gist'
+      'command': 'glist:saveGist'
     }
   ]
 'menu': [
@@ -15,6 +19,10 @@
         {
           'label': 'Toggle'
           'command': 'glist:toggle'
+        },
+        {
+          'label': 'Save Gist'
+          'command': 'glist:saveGist'
         }
       ]
     ]

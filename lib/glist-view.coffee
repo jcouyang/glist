@@ -1,16 +1,14 @@
 {File, Directory} = require 'atom'
 {SelectListView} = require 'atom-space-pen-views'
-octonode = require 'octonode'
+
 _ = require('lodash-fp')
 gistCache = null
-github = null;
-
-github = octonode.client(atom.config.get('glist.githubToken'))
-ghgist = github.gist()
+ghgist = null
 module.exports =
 class GlistView extends SelectListView
-  initialize: ->
+  initialize: (client) ->
     super
+    ghgist = client
     @addClass('overlay from-top')
     @setItems gistCache if gistCache
 
@@ -42,7 +40,7 @@ class GlistView extends SelectListView
 
   confirmed: (item) ->
     if item
-      gistPath = atom.config.get('glist.gistDir') + '/gists/' + item.id + '/'
+      gistPath = atom.config.get('glist.gistDir') + '/' + item.id + '/'
       console.log gistPath
       ghgist.get item.id, (error, gist) ->
         console.log gist
