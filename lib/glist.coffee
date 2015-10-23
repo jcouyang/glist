@@ -9,6 +9,10 @@ module.exports = Glist =
     githubToken:
       type: 'string'
       default: 'github auth token here'
+    gistDir:
+      type: 'string'
+      default: atom.packages.getPackageDirPaths() + '/glist'
+
   activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
