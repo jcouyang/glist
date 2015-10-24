@@ -11,12 +11,12 @@ Taking notes with Github Gist from atom, inspired by national velocity.
 
 **glist** combine all these cool things
 
-##Install
+## Install
 ```
 apm install glist
 ```
 
-##Configure
+## Configure
 ![](./imgs/Settings_-__Users_jcouyang_Develop_glist_-_Atom.png)
 ### Github Token
 1. get a github auth token via either [curl](https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization) or [gui](https://github.com/blog/1509-personal-api-tokens)
@@ -38,8 +38,11 @@ by default every new gist created is markdown.
 ![](./imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom_2.png)
 ### edit gist
 ![](./imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom_1.png)
+
+![](./imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom.png)
 ### create gist
-![]('./imgs/README_md_-__Users_jcouyang_Develop_glist_-_Atom.png')
+![](./imgs/README_md_-__Users_jcouyang_Develop_glist_-_Atom.png)
+
 ![](./imgs/some-not_exist_gist_md_-__Users_jcouyang__atom_packages_glist_gists_-_Atom.png)
 ### TODO: delete gist
 
