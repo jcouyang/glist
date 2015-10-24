@@ -1,12 +1,15 @@
 GlistView = require './glist-view'
+AddDialog = require './add-dialog'
+CSON = require 'season'
 {TextEditorView} = require 'atom-space-pen-views'
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, File} = require 'atom'
 octonode = require 'octonode'
 _ = require('lodash-fp')
 
 module.exports = Glist =
   ghgist: null
   glistView: null
+  addDialog: null
   modalPanel: null
   subscriptions: null
   state: {}
@@ -25,30 +28,46 @@ module.exports = Glist =
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:toggle': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:saveGist': => @saveGist()
-
   deactivate: ->
     @subscriptions.dispose()
     @glistView.destroy()
 
   toggle: ->
-    unless glistView?
+    unless @glistView?
       @ghgist = octonode.client(atom.config.get('glist.githubToken')).gist()
       @glistView = new GlistView(@ghgist, @state)
     @glistView.toggle()
 
   saveGist: ->
-    @ghgist ?= octonode.client(atom.config.get('glist.githubToken')).gist()
     currentItem = atom.workspace.getActivePaneItem()
     gistDir = atom.config.get('glist.gistDir')
+    metafile = new File(currentItem.getURI()).getParent().path + '/.gist.meta.cson'
+    try
+      meta = CSON.readFileSync metafile
+    catch e
+      meta = null
+    @state.meta = meta
     gist = currentItem.getPath().match(/([^/]*)\/([^/]*)$/)
     files = {}
-    files[gist[2]] = {filename:gist[2], content:currentItem.getText()}
-    @ghgist.edit gist[1], {files: files}, (error, body) =>
-      if error.statusCode == 404
-        @ghgist.create {description: @state.filterQuery, files: files}, (error)->
+    files[gist[2]] = {filename: gist[2], content:currentItem.getText()}
+    @addDialog = new AddDialog(@state)
+    @addDialog.onConfirm = (description, publicOrPrivate) =>
+      atom.notifications.addInfo 'uploading gist...'
+      @ghgist ?= octonode.client(atom.config.get('glist.githubToken')).gist()
+      if meta
+        @ghgist.edit meta.id, {files: files, public: publicOrPrivate, description: description}, (error, body) =>
           if error
             atom.notifications.addError error.toString()
           else
-            currentItem.destroy()
+            atom.notifications.addInfo "gist [#{description}] saved."
+            meta.public = publicOrPrivate
+            meta.description = description
+            CSON.writeFile metafile, meta, ->
+              currentItem.save()
       else
-        currentItem.save()
+        @ghgist.create {description: description, files: files, public: publicOrPrivate}, (error)->
+          if error
+            atom.notifications.addError error.toString()
+          else
+            atom.notifications.addInfo "gist [#{description}] saved."
+            currentItem.destroy()

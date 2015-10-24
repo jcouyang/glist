@@ -1,6 +1,6 @@
 {File, Directory} = require 'atom'
 {SelectListView} = require 'atom-space-pen-views'
-
+CSON = require 'season'
 _ = require('lodash-fp')
 gistCache = null
 filterQuery = null
@@ -10,7 +10,7 @@ class GlistView extends SelectListView
   initialize: (client, state) ->
     super
     ghgist = client
-    @addClass('overlay from-top')
+    @addClass('overlay from-top glist-listview')
     @setItems gistCache if gistCache
     @state = state
 
@@ -47,16 +47,21 @@ class GlistView extends SelectListView
         if error
           atom.notifications.addError error
           @cancel()
-        _.forEach (file, filename) ->
-          gistfile = new File(gistPath + filename)
-          gistfile.create().then ->
-            gistfile.write(file.content).then ->
-              atom.workspace.open(gistPath + filename)
+        else
+          _.forEach (file, filename) ->
+            gistfile = new File(gistPath + filename)
+            gistfile.create().then ->
+              gistfile.write(file.content).then ->
+                CSON.writeFile gistPath + '/.gist.meta.cson',
+                  id: item.id
+                  description: item.description
+                  public: item.public
+                atom.workspace.open(gistPath + filename)
+                @cancel()
+            .catch (e)->
               @cancel()
-          .catch (e)->
-            @cancel()
-            atom.notifications.addError e
-        , gist.files
+              atom.notifications.addError e
+          , gist.files
       atom.project.addPath(atom.config.get('glist.gistDir'))
     else
       @cancel()
@@ -64,10 +69,11 @@ class GlistView extends SelectListView
   confirmSelection: ->
     item = @getSelectedItem()
     if item?
+      @state.description = item.description
       @confirmed(item)
     else
-      @state.filterQuery = @getFilterQuery()
-      atom.workspace.open(atom.config.get('glist.gistDir')+ '/.tmp/' +@state.filterQuery?.toLowerCase().replace(" ","-") + atom.config.get('glist.fileSuffix'))
+      @state.description = @getFilterQuery()
+      atom.workspace.open(atom.config.get('glist.gistDir')+ '/.tmp/' +@state.description?.toLowerCase().replace(" ","-") + atom.config.get('glist.fileSuffix'))
 
   cancelled: ->
     @panel?.destroy()
