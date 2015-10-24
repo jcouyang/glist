@@ -1,7 +1,5 @@
 # glist 2.0
 
-![](https://raw.github.com/jcouyang/glist/master/media/glist.gif)
-
 Taking notes with Github Gist from atom, inspired by national velocity.
 
 ## Rationale
@@ -17,7 +15,7 @@ apm install glist
 ```
 
 ## Configure
-![](./imgs/Settings_-__Users_jcouyang_Develop_glist_-_Atom.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/Settings_-__Users_jcouyang_Develop_glist_-_Atom.png)
 ### Github Token
 1. get a github auth token via either [curl](https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization) or [gui](https://github.com/blog/1509-personal-api-tokens)
 2. copy the token and paste to glist's setting
@@ -29,21 +27,21 @@ you can customize where to store your gist files, by default they are under `HOM
 
 ### default suffix for new gist
 by default every new gist created is markdown.
-
+:ca
 ## How to Use
 
 ### find/open gist
-![](./imgs/Styleguide_-__Users_jcouyang_Develop_glist_-_Atom.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/Styleguide_-__Users_jcouyang_Develop_glist_-_Atom.png)
 
-![](./imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom_2.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom_2.png)
 ### edit gist
-![](./imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom_1.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom_1.png)
 
-![](./imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/react-tips_md_-__Users_jcouyang_Develop_glist_-_Atom.png)
 ### create gist
-![](./imgs/README_md_-__Users_jcouyang_Develop_glist_-_Atom.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/README_md_-__Users_jcouyang_Develop_glist_-_Atom.png)
 
-![](./imgs/some-not_exist_gist_md_-__Users_jcouyang__atom_packages_glist_gists_-_Atom.png)
+![](https://github.com/jcouyang/glist/raw/master/imgs/some-not_exist_gist_md_-__Users_jcouyang__atom_packages_glist_gists_-_Atom.png)
 ### TODO: delete gist
 
 ### TODO: open gist on web
