@@ -1,13 +1,22 @@
 # glist 2.0
 
-Taking notes with Github Gist from atom, inspired by national velocity.
+Taking notes with Github Gist from atom, inspired by [national velocity](http://notational.net/)
+
+在 atom 中像 [national velocity](http://notational.net/) 一样快速记笔记，贴代码片段，甚至写博客，迅速保存到 github gist 上
+
+![](http://notational.net/images/notational-diagram.png)
 
 ## Rationale
 1. gist is version controlled, and support almost all markup and programming language.
-2. atom is awesome.
-3. National Velocity is simple and awesome.
+2. atom is awesome (at lease for markdown).
+3. National Velocity is simple, fast and awesome. I use emacs deft every day, but it doesn't have any version control.
 
 **glist** combine all these cool things
+
+## 为什么
+1. gist 带版本管理，每个 gist 都是一个 git repo, 而且支持各种标记和编程语言
+2. atom 非常好用（虽然我写代码时用 emacs，但是 markdown 支持并不如 org-mode）而且开源，插件容易写，于是花了两天
+3. National Velocity 的方式记笔记非常高效，这一点在 emacs 中对应的是 deft mode，缺点是 deft mode 只能同步 dropbox，并不能结合有版本管理的服务 如 gist
 
 ## Install
 ```
