@@ -1,4 +1,5 @@
 GlistView = require './glist-view'
+shell = require 'shell'
 AddDialog = require './add-dialog'
 CSON = require 'season'
 {TextEditorView} = require 'atom-space-pen-views'
@@ -28,6 +29,7 @@ module.exports = Glist =
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:toggle': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:saveGist': => @saveGist()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'glist:delete': => @deleteGist()
   deactivate: ->
     @subscriptions.dispose()
     @glistView.destroy()
@@ -38,7 +40,9 @@ module.exports = Glist =
       @glistView = new GlistView(@ghgist, @state)
     @glistView.toggle()
 
-  saveGist: ->
+  deleteGist: ->
+
+  getMeta: ->
     currentItem = atom.workspace.getActivePaneItem()
     gistDir = atom.config.get('glist.gistDir')
     metafile = new File(currentItem.getURI()).getParent().path + '/.gist.meta.cson'
@@ -48,8 +52,29 @@ module.exports = Glist =
       meta = null
     @state.meta = meta
     gist = currentItem.getPath().match(/([^/]*)\/([^/]*)$/)
+    {meta, metafile, currentItem: currentItem, filename: gist[2], content: currentItem.getText()}
+  deleteGist: ->
+    {meta, metafile, currentItem, filename, content} = @getMeta()
     files = {}
-    files[gist[2]] = {filename: gist[2], content:currentItem.getText()}
+    files[filename] = null
+    atom.confirm
+      message: 'Are you sure?'
+      buttons:
+        Cancel: =>
+        Delete: =>
+          @ghgist ?= octonode.client(atom.config.get('glist.githubToken')).gist()
+          if meta
+            @ghgist.edit meta.id, files:files, (error, body) =>
+              if error
+                atom.notifications.addError error.toString()
+              else
+                atom.notifications.addInfo "file [#{filename}] deleted."
+                shell.moveItemToTrash(currentItem.getPath())
+                currentItem.destroy()
+  saveGist: ->
+    {meta, metafile, currentItem, filename, content} = @getMeta()
+    files = {}
+    files[filename] = {filename: filename, content: content}
     @addDialog = new AddDialog(@state)
     @addDialog.onConfirm = (description, publicOrPrivate) =>
       atom.notifications.addInfo 'uploading gist...'
