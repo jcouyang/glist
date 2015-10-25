@@ -53,7 +53,7 @@ by default every new gist created is markdown.
 ![](https://github.com/jcouyang/glist/raw/master/imgs/some-not_exist_gist_md_-__Users_jcouyang__atom_packages_glist_gists_-_Atom.png)
 
 ### TODO:
-- [ ] delete gist file
+- [X] delete gist file
 - [ ] delete gist
 - [ ] open gist on web
 - [ ] copy gist URL
