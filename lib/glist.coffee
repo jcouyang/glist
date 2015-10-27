@@ -6,7 +6,7 @@ CSON = require 'season'
 {CompositeDisposable, File} = require 'atom'
 octonode = require 'octonode'
 _ = require('lodash-fp')
-
+PASSWORD_MARK = '**********'
 module.exports = Glist =
   ghgist: null
   glistView: null
@@ -18,6 +18,9 @@ module.exports = Glist =
     githubToken:
       type: 'string'
       default: 'github auth token here'
+    tokenPath:
+      type: 'string'
+      default: atom.packages.getPackageDirPaths() + '/glist/.config.cson'
     gistDir:
       type: 'string'
       default: atom.packages.getPackageDirPaths() + '/glist/gists'
@@ -27,6 +30,17 @@ module.exports = Glist =
   activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
+    atom.config.observe 'glist.githubToken', (newToken) ->
+      if newToken == PASSWORD_MARK
+        return
+      CSON.writeFileSync atom.config.get('glist.tokenPath'),
+        token: newToken
+      @githubToken = newToken
+      @ghgist = octonode.client(@githubToken).gist()
+      @glistView = new GlistView(@ghgist, @state)
+      # for security, when submit issue, atom submit all config inclue token
+      atom.config.set 'glist.githubToken', PASSWORD_MARK
+    @githubToken = CSON.readFileSync(atom.config.get('glist.tokenPath'))?.token
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:toggle': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:saveGist': => @saveGist()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:delete': => @deleteGist()
@@ -36,7 +50,7 @@ module.exports = Glist =
 
   toggle: ->
     unless @glistView?
-      @ghgist = octonode.client(atom.config.get('glist.githubToken')).gist()
+      @ghgist = octonode.client(@githubToken).gist()
       @glistView = new GlistView(@ghgist, @state)
     @glistView.toggle()
 
@@ -62,7 +76,7 @@ module.exports = Glist =
       buttons:
         Cancel: =>
         Delete: =>
-          @ghgist ?= octonode.client(atom.config.get('glist.githubToken')).gist()
+          @ghgist ?= octonode.client(@githubToken).gist()
           if meta
             @ghgist.edit meta.id, files:files, (error, body) =>
               if error
@@ -78,7 +92,7 @@ module.exports = Glist =
     @addDialog = new AddDialog(@state)
     @addDialog.onConfirm = (description, publicOrPrivate) =>
       atom.notifications.addInfo 'uploading gist...'
-      @ghgist ?= octonode.client(atom.config.get('glist.githubToken')).gist()
+      @ghgist ?= octonode.client(@githubToken).gist()
       if meta
         @ghgist.edit meta.id, {files: files, public: publicOrPrivate, description: description}, (error, body) =>
           if error
