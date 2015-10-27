@@ -65,8 +65,7 @@ module.exports = Glist =
     catch e
       meta = null
     @state.meta = meta
-    gist = currentItem.getPath().match(/([^/]*)\/([^/]*)$/)
-    {meta, metafile, currentItem: currentItem, filename: gist[2], content: currentItem.getText()}
+    {meta, metafile, currentItem: currentItem, filename: currentItem.getTitle(), content: currentItem.getText()}
   deleteGist: ->
     {meta, metafile, currentItem, filename, content} = @getMeta()
     files = {}
