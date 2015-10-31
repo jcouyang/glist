@@ -1,5 +1,6 @@
+CSON = require 'season'
 Glist = require '../lib/glist'
-
+octonode = require 'octonode'
 # Use the command `window:run-package-specs` (cmd-alt-ctrl-p) to run specs.
 #
 # To run a specific `it` or `describe` block add an `f` to the front (e.g. `fit`
@@ -9,54 +10,72 @@ describe "Glist", ->
   [workspaceElement, activationPromise] = []
 
   beforeEach ->
+    spyOn(octonode, 'client').andReturn
+        gist: ->
+          create: (option, cb)->
+            cb()
+          edit: (id, option, cb) ->
+            cb()
+          list: (cb) ->
+            cb()
     workspaceElement = atom.views.getView(atom.workspace)
     activationPromise = atom.packages.activatePackage('glist')
 
   describe "when the glist:toggle event is triggered", ->
-    it "hides and shows the modal panel", ->
-      # Before the activation event the view is not on the DOM, and no panel
-      # has been created
-      expect(workspaceElement.querySelector('.glist')).not.toExist()
-
-      # This is an activation event, triggering it will cause the package to be
-      # activated.
+    beforeEach ->
+      spyOn(atom.config, 'get').andReturn('/tmp/glist-test.cson');
+      spyOn(atom.config, 'set')
       atom.commands.dispatch workspaceElement, 'glist:toggle'
-
       waitsForPromise ->
         activationPromise
 
-      runs ->
-        expect(workspaceElement.querySelector('.glist')).toExist()
+    it "hides and shows the modal panel", ->
+      expect(workspaceElement.querySelector('.glist-listview')).toExist()
+    it 'write config into a file', ->
+      expect(CSON.readFileSync('/tmp/glist-test.cson').token).toBe('/tmp/glist-test.cson')
+    it 'safely mask github token in atom config', ->
+      expect(atom.config.set).toHaveBeenCalledWith('glist.githubToken', '**********')
+  describe 'getMeta', ->
+    beforeEach ->
+      spyOn(atom.config, 'get').andReturn('/tmp/glist-test.cson');
+      spyOn(atom.config, 'set')
+      spyOn(atom.workspace, 'getActivePaneItem').andReturn
+        getURI: ->
+          '/tmp/gistid/gist-file-name.rb'
+        getTitle: ->
+          'gist-file-name.rb'
+        getText: ->
+          'gist content blah blah'
+        destroy: jasmine.createSpy()
+      # CSON.writeFileSync '/tmp/glist-test.cson',
+      #   hehe: 'da'
+      atom.commands.dispatch workspaceElement, 'glist:toggle'
+      atom.commands.dispatch workspaceElement, 'glist:saveGist'
+      waitsForPromise ->
+        activationPromise
+    it 'get all meta data from meta file', ->
+      dialogElement = workspaceElement.querySelector('.tree-view-dialog')
+      dialogElement.querySelector('.btn-primary').click()
 
-        glistElement = workspaceElement.querySelector('.glist')
-        expect(glistElement).toExist()
 
-        glistPanel = atom.workspace.panelForItem(glistElement)
-        expect(glistPanel.isVisible()).toBe true
-        atom.commands.dispatch workspaceElement, 'glist:toggle'
-        expect(glistPanel.isVisible()).toBe false
-
-    it "hides and shows the view", ->
+  describe "intergration test", ->
       # This test shows you an integration test testing at the view level.
 
       # Attaching the workspaceElement to the DOM is required to allow the
       # `toBeVisible()` matchers to work. Anything testing visibility or focus
       # requires that the workspaceElement is on the DOM. Tests that attach the
       # workspaceElement to the DOM are generally slower than those off DOM.
+    beforeEach ->
       jasmine.attachToDOM(workspaceElement)
-
-      expect(workspaceElement.querySelector('.glist')).not.toExist()
-
-      # This is an activation event, triggering it causes the package to be
-      # activated.
+      spyOn(atom.config, 'get').andReturn('/tmp/glist-test.cson');
+      spyOn(atom.config, 'set')
       atom.commands.dispatch workspaceElement, 'glist:toggle'
-
       waitsForPromise ->
         activationPromise
 
-      runs ->
+    it 'hide and show glist view', ->
         # Now we can test for view visibility
-        glistElement = workspaceElement.querySelector('.glist')
-        expect(glistElement).toBeVisible()
-        atom.commands.dispatch workspaceElement, 'glist:toggle'
-        expect(glistElement).not.toBeVisible()
+      glistElement = workspaceElement.querySelector('.glist-listview')
+      expect(glistElement).toBeVisible()
+      atom.commands.dispatch workspaceElement, 'glist:toggle'
+      expect(glistElement).not.toBeVisible()

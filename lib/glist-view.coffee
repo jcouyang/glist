@@ -11,11 +11,12 @@ class GlistView extends SelectListView
     super
     ghgist = client
     @addClass('overlay from-top glist-listview')
-    @setItems gistCache if gistCache
+
     @state = state
 
   attachList: ->
     @storeFocusedElement()
+    @setItems gistCache if gistCache
     @setLoading("Fetching All Gists...")
     @panel ?= atom.workspace.addModalPanel(item: this)
     ghgist.list (error, gists) =>
@@ -26,7 +27,6 @@ class GlistView extends SelectListView
           .join ' '
         gist
       gistCache = indexedGists.value()
-      gistCache.push {description: 'create new gist', key: 'create new add', files: {}}
       @setItems(gistCache) unless error
     @focusFilterEditor()
 

@@ -50,7 +50,7 @@ module.exports = Glist =
 
   toggle: ->
     unless @glistView?
-      @ghgist = octonode.client(@githubToken).gist()
+      @ghgist ?= octonode.client(@githubToken).gist()
       @glistView = new GlistView(@ghgist, @state)
     @glistView.toggle()
 
