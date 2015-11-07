@@ -24,15 +24,19 @@ apm install glist
 ```
 
 ## Configure
-![](https://github.com/jcouyang/glist/raw/master/imgs/Settings_-__Users_jcouyang_Develop_glist_-_Atom.png)
+![](https://www.evernote.com/l/ABfoXCABoadBmpTgE92e5DtGnt61pgXFfs4B/image.png)
 ### Github Token
 1. get a github auth token via either [curl](https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization) or [gui](https://github.com/blog/1509-personal-api-tokens)
 2. copy the token and paste to glist's setting
+> ⚠ your token will be saved **safely** under `~/.atom/glist/.config.cson`, then token in config panel willbe mask as `********`, then it will be safe to use dotfiles to sync you atom config.
 
 ### Gist Directory
 you can customize where to store your gist files, by default they are under `HOME/.atom/package/glist/gists`
 
 :heavy_exclamation_mark: the path has to be a absolute, no relative, `~` doesn't work either
+
+### Token Path
+this is the place where storing you github token, config it to a safe place. by default it's `~/.atom/glist/.config.cson`
 
 ### default suffix for new gist
 by default every new gist created is markdown.
@@ -52,11 +56,17 @@ by default every new gist created is markdown.
 
 ![](https://github.com/jcouyang/glist/raw/master/imgs/some-not_exist_gist_md_-__Users_jcouyang__atom_packages_glist_gists_-_Atom.png)
 
+### delete gist file
+in the gist file you wanna delete, press `ctrl-c ctrl-d`
+
+### delete gist folder
+in any gist file, press `ctrl-c cmd-d` on mac, on windows `cmd` is `windows` key? im not sure
+
 ### TODO:
 - [X] delete gist file
-- [ ] delete gist
+- [X] delete gist
 - [ ] open gist on web
 - [ ] copy gist URL
-- [ ] writing tests
+- [X] writing tests
 
 now I can use Atom and gist in place of Notational Velocity/Evernote :beer:
