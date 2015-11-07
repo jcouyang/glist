@@ -44,6 +44,7 @@ module.exports = Glist =
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:toggle': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:saveGist': => @saveGist()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:delete': => @deleteGist()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'glist:deleteGist': => @deleteGistFoler()
   deactivate: ->
     @subscriptions.dispose()
     @glistView.destroy()
@@ -82,7 +83,7 @@ module.exports = Glist =
                 atom.notifications.addError error.toString()
               else
                 atom.notifications.addInfo "file [#{filename}] deleted."
-                shell.moveItemToTrash(currentItem.getPath())
+                shell.moveItemToTrash(currentItem.getURI())
                 currentItem.destroy()
   saveGist: ->
     {meta, metafile, currentItem, filename, content} = @getMeta()
@@ -109,3 +110,24 @@ module.exports = Glist =
           else
             atom.notifications.addInfo "gist [#{description}] saved."
             currentItem.destroy()
+
+  deleteGistFoler: ->
+    {meta, metafile, currentItem, filename, content} = @getMeta()
+    files = {}
+    files[filename] = null
+    if !meta?.id
+      atom.notifications.addWarning "it's not a gist, you cannot delete it!"
+      return
+    atom.confirm
+      message: "This will delete #{meta.id} and its folder, are you sure?"
+      buttons:
+        Cancel: =>
+        Delete: =>
+          @ghgist ?= octonode.client(@githubToken).gist()
+          @ghgist.delete meta.id, (error) ->
+            if error
+              atom.notifications.addError error.toString()
+            else
+              atom.notifications.addInfo "gist [#{meta.id}] deleted."
+              shell.moveItemToTrash(new File(currentItem.getURI()).getParent().path)
+              currentItem.destroy()

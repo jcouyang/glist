@@ -1,4 +1,4 @@
-# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more details
+# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more detail
 'context-menu':
   'atom-text-editor': [
     {
@@ -8,6 +8,14 @@
     {
       'label': 'Save Gist'
       'command': 'glist:saveGist'
+    },
+    {
+      label: 'Delete Gist File'
+      command: 'glist:delete'
+    },
+    {
+      label: 'Delete Gist'
+      command: 'glist:deleteGist'
     }
   ]
 'menu': [
@@ -23,7 +31,15 @@
         {
           'label': 'Save Gist'
           'command': 'glist:saveGist'
-        }
+        },
+        {
+          label: 'Delete Gist File'
+          command: 'glist:delete'
+        },
+        {
+          label: 'Delete Gist'
+          command: 'glist:deleteGist'
+        },
       ]
     ]
   }

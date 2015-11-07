@@ -9,8 +9,17 @@ shell = require 'shell'
 
 describe "Glist", ->
   [workspaceElement, activationPromise] = []
-
+  currentItem = null
   beforeEach ->
+    currentItem =
+      getURI: ->
+        '/tmp/gistid/gist-file-name.rb'
+      getTitle: ->
+        'gist-file-name.rb'
+      getText: ->
+        'gist content blah blah'
+      destroy: jasmine.createSpy()
+      save: jasmine.createSpy()
     spyOn(octonode, 'client').andReturn
         gist: ->
           create: (option, cb)->
@@ -19,6 +28,9 @@ describe "Glist", ->
             cb()
           list: (cb) ->
             cb()
+          delete: (id, cb) ->
+            cb()
+
     workspaceElement = atom.views.getView(atom.workspace)
     activationPromise = atom.packages.activatePackage('glist')
 
@@ -36,8 +48,31 @@ describe "Glist", ->
       expect(CSON.readFileSync('/tmp/.gist.meta.cson').token).toBe('/tmp/.gist.meta.cson')
     it 'safely mask github token in atom config', ->
       expect(atom.config.set).toHaveBeenCalledWith('glist.githubToken', '**********')
+  describe 'delete Gist file', ->
+    afterEach ->
+      shell.moveItemToTrash '/tmp/gistid/.gist.meta.cson'
+
+    beforeEach ->
+      spyOn(atom.config, 'get').andReturn('/tmp/.gist.meta.cson');
+      spyOn(atom.config, 'set')
+      spyOn atom.notifications, 'addInfo'
+
+    describe 'confirm', ->
+      beforeEach ->
+        spyOn(atom.workspace, 'getActivePaneItem').andReturn currentItem
+        spyOn atom, 'confirm'
+        CSON.writeFileSync '/tmp/gistid/.gist.meta.cson',
+          id: 'gist-id'
+          description: 'gist description'
+        atom.commands.dispatch workspaceElement, 'glist:toggle'
+        atom.commands.dispatch workspaceElement, 'glist:delete'
+        waitsForPromise ->
+          activationPromise
+      it 'delete gist file', ->
+        atom.confirm.calls[0].args[0].buttons.Delete()
+        expect(atom.notifications.addInfo).toHaveBeenCalledWith('file [gist-file-name.rb] deleted.')
+
   describe 'saveGist', ->
-    currentItem = null
     beforeEach ->
       spyOn(atom.config, 'get').andReturn('/tmp/.gist.meta.cson');
       spyOn(atom.config, 'set')
@@ -45,14 +80,6 @@ describe "Glist", ->
 
     describe 'without meta file', ->
       beforeEach ->
-        currentItem =
-          getURI: ->
-            '/tmp/gistid/gist-file-name.rb'
-          getTitle: ->
-            'gist-file-name.rb'
-          getText: ->
-            'gist content blah blah'
-          destroy: jasmine.createSpy()
         spyOn(atom.workspace, 'getActivePaneItem').andReturn currentItem
         atom.commands.dispatch workspaceElement, 'glist:toggle'
         atom.commands.dispatch workspaceElement, 'glist:saveGist'
@@ -68,15 +95,6 @@ describe "Glist", ->
       afterEach ->
         shell.moveItemToTrash '/tmp/gistid/.gist.meta.cson'
       beforeEach ->
-        currentItem =
-          getURI: ->
-            '/tmp/gistid/gist-file-name.rb'
-          getTitle: ->
-            'gist-file-name.rb'
-          getText: ->
-            'gist content blah blah'
-          destroy: jasmine.createSpy()
-          save: jasmine.createSpy()
         CSON.writeFileSync '/tmp/gistid/.gist.meta.cson',
           id: 'gist-id'
           description: 'gist description'
@@ -97,6 +115,32 @@ describe "Glist", ->
           description: 'gist description'
           public: false
         expect(currentItem.save).toHaveBeenCalled()
+
+  describe 'delete Gist folder', ->
+    afterEach ->
+      shell.moveItemToTrash '/tmp/gistid/.gist.meta.cson'
+
+    beforeEach ->
+      spyOn(atom.config, 'get').andReturn('/tmp/.gist.meta.cson');
+      spyOn(atom.config, 'set')
+      spyOn atom.notifications, 'addInfo'
+      spyOn(shell, 'moveItemToTrash').andCallThrough()
+
+    describe 'confirm', ->
+      beforeEach ->
+        spyOn(atom.workspace, 'getActivePaneItem').andReturn currentItem
+        spyOn atom, 'confirm'
+        CSON.writeFileSync '/tmp/gistid/.gist.meta.cson',
+          id: 'gist-id'
+          description: 'gist description'
+        atom.commands.dispatch workspaceElement, 'glist:toggle'
+        atom.commands.dispatch workspaceElement, 'glist:deleteGist'
+        waitsForPromise ->
+          activationPromise
+      it 'delete gist folder', ->
+        atom.confirm.calls[0].args[0].buttons.Delete()
+        expect(atom.notifications.addInfo).toHaveBeenCalledWith('gist [gist-id] deleted.')
+        expect(shell.moveItemToTrash).toHaveBeenCalledWith('/tmp/gistid')
 
   describe "intergration test", ->
       # This test shows you an integration test testing at the view level.
