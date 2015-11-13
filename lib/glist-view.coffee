@@ -73,7 +73,12 @@ class GlistView extends SelectListView
       @confirmed(item)
     else
       @state.description = @getFilterQuery()
-      atom.workspace.open(atom.config.get('glist.gistDir')+ '/.tmp/' +@state.description?.toLowerCase().replace(" ","-") + atom.config.get('glist.fileSuffix'))
+      filename = "#{atom.config.get('glist.gistDir')}/.tmp/#{@state.description?.toLowerCase().replace(" ","-")}"
+      if @state.description?.match(/\.[^\.]+\!$/)
+        filename = filename.replace(/!$/, '')
+      else
+        filename = filename.concat(atom.config.get('glist.fileSuffix'))
+      atom.workspace.open filename
 
   cancelled: ->
     @panel?.destroy()

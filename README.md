@@ -56,6 +56,9 @@ by default every new gist created is markdown.
 
 ![](https://github.com/jcouyang/glist/raw/master/imgs/some-not_exist_gist_md_-__Users_jcouyang__atom_packages_glist_gists_-_Atom.png)
 
+> now create a gist with you own suffix just by adding an `!` at the end. for example `fancy ruby file.rb` will now actually create a ruby file instead of default markdown.
+
+
 ### delete gist file
 in the gist file you wanna delete, press `ctrl-c ctrl-d`
 
@@ -69,4 +72,6 @@ in any gist file, press `ctrl-c cmd-d` on mac, on windows `cmd` is `windows` key
 - [ ] copy gist URL
 - [X] writing tests
 
-now I can use Atom and gist in place of Notational Velocity/Evernote :beer:
+now I can use Atom and gist in place of Notational Velocity/Evernote
+
+[Thank you! Let me buy you a :beer: please~](https://gum.co/3q)
