@@ -27,6 +27,9 @@ module.exports = Glist =
     fileSuffix:
       type: 'string'
       default: '.md'
+    gistLocation:
+      type: 'string'
+      default: 'https://gist.github.com'
   activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -45,6 +48,8 @@ module.exports = Glist =
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:saveGist': => @saveGist()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:delete': => @deleteGist()
     @subscriptions.add atom.commands.add 'atom-workspace', 'glist:deleteGist': => @deleteGistFoler()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'glist:copyGistUrl': => @copyGistUrl()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'glist:openGistWeb': => @openGistWeb()
   deactivate: ->
     @subscriptions.dispose()
     @glistView.destroy()
@@ -111,6 +116,17 @@ module.exports = Glist =
             atom.notifications.addInfo "gist [#{description}] saved."
             currentItem.destroy()
 
+  copyGistUrl: ->
+    if @getMeta().meta?.id
+      location = atom.config.get('glist.gistLocation') + '/' + @getMeta().meta.id
+      atom.clipboard.write(location)
+      atom.notifications.addInfo 'gist url copied!'
+      location
+    else
+      atom.notifications.addError 'not a gist, please ctrl-x ctrl-s save first!'
+  openGistWeb: ->
+    url = @copyGistUrl()
+    shell.openExternal(url) if url
   deleteGistFoler: ->
     {meta, metafile, currentItem, filename, content} = @getMeta()
     files = {}

@@ -12,3 +12,5 @@
   'ctrl-x ctrl-s': 'glist:saveGist'
   'ctrl-c ctrl-d': 'glist:delete'
   'ctrl-c cmd-d': 'glist:deleteGist'
+  'ctrl-c cmd-c': 'glist:copyGistUrl'
+  'ctrl-c ctrl-o': 'glist:openGistWeb'
