@@ -2,7 +2,7 @@
   "name": "glist",
   "main": "./lib/glist",
   "version": "2.2.0",
-  "description": "taking notes with Github Gist from atom, inspired by national velocity",
+  "description": "taking notes with Github Gist from atom, inspired by notational velocity",
   "keywords": [
     "gist",
     "github",
