@@ -19,7 +19,7 @@ class GlistView extends SelectListView
     @setItems gistCache if gistCache
     @setLoading("Fetching All Gists...")
     @panel ?= atom.workspace.addModalPanel(item: this)
-    ghgist.list (error, gists) =>
+    ghgist.list 1, 100, (error, gists) =>
       indexedGists = _(gists).map (gist) ->
         gist.key = gist.description + " " + _.values(gist.files)
           .map (file)->
