@@ -1,5 +1,7 @@
 # glist 2.0
 
+[![apm](https://img.shields.io/apm/dm/glist.svg?maxAge=2592000)](https://atom.io/packages/glist)
+
 Taking notes with Github Gist from atom, inspired by [notational velocity](http://notational.net/)
 
 在 atom 中像 [notational velocity](http://notational.net/) 一样快速记笔记，贴代码片段，甚至写博客，迅速保存到 github gist 上
