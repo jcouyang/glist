@@ -30,6 +30,8 @@ apm install glist
 ### Github Token
 1. get a github auth token via either [curl](https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization) or [gui](https://github.com/blog/1509-personal-api-tokens)
 2. copy the token and paste to glist's setting
+3. :point_right: **RESTART** your atom
+
 > ⚠ your token will be saved **safely** under `~/.atom/glist/.config.cson`, then token in config panel willbe mask as `********`, then it will be safe to use dotfiles to sync you atom config.
 
 ### Gist Directory
